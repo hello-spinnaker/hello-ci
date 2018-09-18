@@ -1,0 +1,108 @@
+{
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "test@gereji.com",
+  "limitConcurrent": true,
+  "stages": [
+    {
+      "account": "kubernetes",
+      "cloudProvider": "kubernetes",
+      "continuePipeline": false,
+      "failPipeline": true,
+      "manifestArtifactAccount": "embedded-artifact",
+      "moniker": {
+        "app": "hello-ci"
+      },
+      "name": "Travis Simulated",
+      "refId": "1",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requisiteStageRefIds": [],
+      "source": "text",
+      "type": "wait",
+      "user": "david@gereji.com",
+      "waitForCompletion": true,
+      "waitTime": -4
+    },
+    {
+      "name": "GCB Simulated",
+      "refId": "2",
+      "requisiteStageRefIds": [],
+      "type": "wait",
+      "waitTime": 10
+    },
+    {
+      "name": "Run Integration Tests",
+      "refId": "4",
+      "requisiteStageRefIds": [
+        "7"
+      ],
+      "type": "wait",
+      "waitTime": 10
+    },
+    {
+      "name": "Buddy Check",
+      "refId": "6",
+      "requisiteStageRefIds": [
+        "9"
+      ],
+      "type": "wait",
+      "waitTime": 30
+    },
+    {
+      "method": "POST",
+      "name": "Deploy Staging",
+      "payload": {
+        "deploy": {
+          "branch": "${trigger['branch']}",
+          "commit": {
+            "message": "${trigger['id']}",
+            "sha": "${trigger['hash']}"
+          }
+        }
+      },
+      "refId": "7",
+      "requisiteStageRefIds": [
+        "1",
+        "2"
+      ],
+      "statusUrlResolution": "getMethod",
+      "type": "webhook",
+      "url": "SAMSON_DEPLOY_WEBHOOK_URL",
+      "waitForCompletion": false,
+      "waitTime": 10
+    },
+    {
+      "customHeaders": {
+        "Authorization": "Bearer SAMSON_TOKEN"
+      },
+      "method": "POST",
+      "name": "Deploy Production",
+      "payload": {
+        "deploy": {
+          "reference": "${trigger['hash']}"
+        }
+      },
+      "refId": "9",
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "statusUrlResolution": "getMethod",
+      "type": "webhook",
+      "url": "http://samson.zd-mini.com/projects/hello-ci/stages/production/deploys"
+    }
+  ],
+  "triggers": [
+    {
+      "branch": "master",
+      "enabled": true,
+      "project": "zendesk",
+      "secret": "san mateo",
+      "slug": "hello-ci",
+      "source": "github",
+      "type": "git"
+    }
+  ],
+  "updateTs": "1537298191000"
+}
